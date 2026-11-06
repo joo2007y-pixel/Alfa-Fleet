@@ -3,79 +3,235 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>إدارة سلف المناديب - Alfa Fleet</title>
-    <!-- استايلات وتصميم الصفحة القديم الأصلي -->
+    <title>نظام سلف المناديب - Alfa Fleet</title>
+    <!-- استايلات مودرن ونظيفة جداً -->
     <style>
-        body { font-family: Tahoma, sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; direction: rtl; }
-        .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        h2 { text-align: center; color: #004b93; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; color: #333; }
-        input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        button { width: 100%; padding: 12px; background-color: #004b93; color: white; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; font-weight: bold; }
-        button:hover { background-color: #003366; }
-        .table-responsive { overflow-x: auto; margin-top: 20px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: center; font-size: 12px; }
-        th { background-color: #004b93; color: white; }
+        :root {
+            --primary-color: #004b93;
+            --primary-hover: #003366;
+            --bg-color: #f0f2f5;
+            --card-bg: #ffffff;
+            --text-color: #2c3e50;
+            --border-radius: 10px;
+        }
+
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background-color: var(--bg-color); 
+            margin: 0; 
+            padding: 20px 10px; 
+            direction: rtl; 
+            color: var(--text-color);
+        }
+
+        .main-wrapper {
+            max-width: 650px;
+            margin: auto;
+        }
+
+        .container { 
+            background: var(--card-bg); 
+            padding: 30px; 
+            border-radius: var(--border-radius); 
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08); 
+            margin-bottom: 25px;
+        }
+
+        .header-title { 
+            text-align: center; 
+            color: var(--primary-color); 
+            margin-top: 0;
+            margin-bottom: 25px;
+            font-size: 24px;
+            border-bottom: 2px solid #eef2f5;
+            padding-bottom: 15px;
+        }
+
+        .form-group { 
+            margin-bottom: 18px; 
+        }
+
+        label { 
+            display: block; 
+            margin-bottom: 6px; 
+            font-weight: 600; 
+            font-size: 14px;
+        }
+
+        input, select { 
+            width: 100%; 
+            padding: 12px 14px; 
+            border: 1.5px solid #dcdfe6; 
+            border-radius: 6px; 
+            box-sizing: border-box; 
+            font-size: 14px;
+            transition: border-color 0.2s ease;
+            outline: none;
+        }
+
+        input:focus, select:focus {
+            border-color: var(--primary-color);
+        }
+
+        .btn-submit { 
+            width: 100%; 
+            padding: 14px; 
+            background-color: var(--primary-color); 
+            color: white; 
+            border: none; 
+            border-radius: 6px; 
+            font-size: 16px; 
+            cursor: pointer; 
+            font-weight: bold; 
+            transition: background 0.2s;
+            margin-top: 10px;
+        }
+
+        .btn-submit:hover { 
+            background-color: var(--primary-hover); 
+        }
+
+        .btn-admin-toggle {
+            background-color: #5a6268;
+            margin-top: 15px;
+        }
+
+        .btn-admin-toggle:hover {
+            background-color: #464c51;
+        }
+
+        /* استايلات لوحة المحاسبين */
+        .admin-section {
+            display: none;
+            margin-top: 20px;
+            background: #fff;
+            padding: 20px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        .table-responsive { 
+            overflow-x: auto; 
+            margin-top: 15px; 
+        }
+
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            white-space: nowrap;
+        }
+
+        th, td { 
+            border: 1px solid #ebeef5; 
+            padding: 10px 12px; 
+            text-align: center; 
+            font-size: 13px; 
+        }
+
+        th { 
+            background-color: var(--primary-color); 
+            color: white; 
+            font-weight: 600;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9fafc;
+        }
+
+        .status-tag {
+            font-size: 11px;
+            color: #28a745;
+            text-align: center;
+            margin-top: 12px;
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h2>طلب سلفة لمناديب الفا فليت</h2>
-    
-    <div class="form-group">
-        <label for="courierName">اسم المندوب:</label>
-        <input type="text" id="courierName" placeholder="أدخل اسم المندوب ثلاثي">
+<div class="main-wrapper">
+    <!-- نموذج تسجيل طلب السلفة للمناديب -->
+    <div class="container">
+        <h2 class="header-title">طلب سلفة لمناديب أصفا فليت</h2>
+        
+        <div class="form-group">
+            <label for="courierName">اسم المندوب ثلاثي:</label>
+            <input type="text" id="courierName" placeholder="أدخل الاسم ثلاثي">
+        </div>
+
+        <div class="form-group">
+            <label for="branchInput">الفرع:</label>
+            <input type="text" id="branchInput" placeholder="أدخل اسم الفرع">
+        </div>
+
+        <div class="form-group">
+            <label for="governorateInput">المحافظة:</label>
+            <input type="text" id="governorateInput" placeholder="أدخل المحافظة">
+        </div>
+
+        <div class="form-group">
+            <label for="transferNumber">رقم التحويل:</label>
+            <input type="text" id="transferNumber" placeholder="رقم عملية التحويل">
+        </div>
+
+        <div class="form-group">
+            <label for="transferMethod">طريقة التحويل:</label>
+            <select id="transferMethod">
+                <option value="Vodafone Cash">فودافون كاش</option>
+                <option value="InstaPay">إنستاباي</option>
+                <option value="Bank Transfer">تحويل بنكي</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="advanceAmount">مبلغ السلفة (بالجنيه):</label>
+            <input type="number" id="advanceAmount" placeholder="0.00">
+        </div>
+
+        <div class="form-group">
+            <label for="receiptImage">صورة إيصال التحويل:</label>
+            <input type="file" id="receiptImage" accept="image/*">
+        </div>
+
+        <button type="button" class="btn-submit" onclick="submitAdvanceDirect()">حفظ وإرسال الطلب</button>
+        <button type="button" class="btn-submit btn-admin-toggle" onclick="openAdminPanel()">دخول المحاسبين 🔒</button>
+        
+        <div class="status-tag" id="deviceStatus">🔒 الجهاز مؤمن ومربوط بالنظام</div>
     </div>
 
-    <div class="form-group">
-        <label for="branchInput">الفرع:</label>
-        <input type="text" id="branchInput" placeholder="أدخل اسم الفرع">
+    <!-- لوحة تحكم المحاسبين (محمية بباسورد) -->
+    <div class="container admin-section" id="adminPanel">
+        <h2 class="header-title" style="color: #2c3e50;">سجل طلبات السلف (خاص بالمحاسبين)</h2>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>اسم المندوب</th>
+                        <th>الفرع</th>
+                        <th>المحافظة</th>
+                        <th>رقم التحويل</th>
+                        <th>الطريقة</th>
+                        <th>المبلغ</th>
+                        <th>الإيصال</th>
+                        <th>التاريخ</th>
+                    </tr>
+                </thead>
+                <tbody id="advancesTableBody">
+                    <!-- سيتم تحميل البيانات هنا -->
+                </tbody>
+            </table>
+        </div>
     </div>
-
-    <div class="form-group">
-        <label for="governorateInput">المحافظة:</label>
-        <input type="text" id="governorateInput" placeholder="أدخل المحافظة">
-    </div>
-
-    <div class="form-group">
-        <label for="transferNumber">رقم التحويل:</label>
-        <input type="text" id="transferNumber" placeholder="رقم عملية التحويل">
-    </div>
-
-    <div class="form-group">
-        <label for="transferMethod">طريقة التحويل:</label>
-        <select id="transferMethod">
-            <option value="Vodafone Cash">فودافون كاش</option>
-            <option value="InstaPay">إنستاباي</option>
-            <option value="Bank Transfer">تحويل بنكي</option>
-        </select>
-    </div>
-
-    <div class="form-group">
-        <label for="advanceAmount">مبلغ السلفة:</label>
-        <input type="number" id="advanceAmount" placeholder="المبلغ بالجنيه">
-    </div>
-
-    <div class="form-group">
-        <label for="receiptImage">صورة إيصال التحويل:</label>
-        <input type="file" id="receiptImage" accept="image/*">
-    </div>
-
-    <button type="button" onclick="submitAdvanceDirect()">حفظ وإرسال الطلب</button>
 </div>
 
-<!-- سكريبت تشغيل فايبريس وربط البيانات مع الحماية الأمنية للجهاز -->
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { 
         getFirestore, 
         collection, 
-        addDoc,
-        getDocs,
-        query,
+        addDoc, 
+        getDocs, 
+        query, 
         where 
     } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
@@ -92,7 +248,7 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // توليد أو جلب بصمة فريدة للموبايل الحالي وتخزينها محلياً
+    // بصمة الجهاز لحماية الحساب من التلاعب
     function getDeviceFingerprint() {
         let deviceId = localStorage.getItem('alfa_device_id');
         if (!deviceId) {
@@ -104,6 +260,7 @@
 
     const currentDeviceID = getDeviceFingerprint();
 
+    // إرسال الطلب وحفظه
     window.submitAdvanceDirect = async function() {
         const nameInput = document.getElementById('courierName');
         const branchInput = document.getElementById('branchInput');
@@ -133,7 +290,7 @@
         const fileName = receiptInput.files[0].name;
 
         try {
-            // التحقق مما إذا كان اسم المندوب مسجلاً بجهاز مختلف مسبقاً
+            // التحقق من الجهاز المسجل سابقاً لنفس اسم المندوب
             const q = query(collection(db, "advances"), where("name", "==", name));
             const querySnapshot = await getDocs(q);
 
@@ -146,11 +303,11 @@
             });
 
             if (registeredDevice && registeredDevice !== currentDeviceID) {
-                alert("⚠️ تنبيه أمني: هذا المندوب مسجل بالفعل على هاتف آخر! لا يمكن الإرسال من هذا الجهاز.");
+                alert("⚠️ تنبيه أمني: هذا المندوب مسجل بالفعل على هاتف آخر! لا يمكن الإرسال إلا من هاتف المندوب الأصلي.");
                 return;
             }
 
-            // إرسال البيانات مع بصمة الجهاز الحالية
+            // حفظ الطلب
             await addDoc(collection(db, "advances"), {
                 name: name,
                 branch: branch,
@@ -164,14 +321,62 @@
                 dateString: dateStr
             });
             
-            alert("تم إرسال الطلب وحفظه في فايربيس بنجاح!");
+            alert("تم إرسال الطلب وحفظه بنجاح!");
             
-            document.querySelector('.container').querySelectorAll('input[type="text"], input[type="number"], input[type="file"]').forEach(input => input.value = '');
+            // تفريغ المدخلات
+            document.querySelectorAll('input[type="text"], input[type="number"], input[type="file"]').forEach(input => input.value = '');
 
         } catch (error) {
             alert("خطأ أثناء الحفظ: " + error.message);
         }
     };
+
+    // فتح لوحة المحاسبين بالباسورد
+    window.openAdminPanel = async function() {
+        const password = prompt("برجاء أدخال كلمة سر المحاسبين:");
+        // الباسورد الافتراضي هو 123456
+        if (password === "55555") {
+            const adminPanel = document.getElementById('adminPanel');
+            adminPanel.style.display = 'block';
+            adminPanel.scrollIntoView({ behavior: 'smooth' });
+            await loadAdvancesData();
+        } else if (password !== null) {
+            alert("كلمة السر غير صحيحة!");
+        }
+    };
+
+    // جلب البيانات للجدول
+    async function loadAdvancesData() {
+        const tbody = document.getElementById('advancesTableBody');
+        tbody.innerHTML = "<tr><td colspan='8'>جاري تحميل البيانات...</td></tr>";
+
+        try {
+            const querySnapshot = await getDocs(collection(db, "advances"));
+            tbody.innerHTML = "";
+            
+            querySnapshot.forEach((doc) => {
+                const data = doc.data();
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>${data.name || '-'}</strong></td>
+                        <td>${data.branch || '-'}</td>
+                        <td>${data.governorate || '-'}</td>
+                        <td>${data.transferNumber || '-'}</td>
+                        <td>${data.transferMethod || '-'}</td>
+                        <td><strong>${data.amount || 0} ج.م</strong></td>
+                        <td>${data.receiptImageName || 'مرفق'}</td>
+                        <td>${data.dateString || '-'}</td>
+                    </tr>
+                `;
+            });
+
+            if (tbody.innerHTML === "") {
+                tbody.innerHTML = "<tr><td colspan='8'>لا توجد طلبات سلف مسجلة حالياً</td></tr>";
+            }
+        } catch (error) {
+            tbody.innerHTML = "<tr><td colspan='8'>حدث خطأ في تحميل البيانات</td></tr>";
+        }
+    }
 </script>
 
 </body>
