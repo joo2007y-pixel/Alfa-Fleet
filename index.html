@@ -4,19 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>إدارة سلف المناديب - Alfa Fleet</title>
+    <!-- استايلات وتصميم الصفحة القديم الأصلي -->
     <style>
         body { font-family: Tahoma, sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; direction: rtl; }
-        .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         h2 { text-align: center; color: #004b93; }
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; font-weight: bold; color: #333; }
         input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        button { width: 100%; padding: 12px; background-color: #004b93; color: white; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; font-weight: bold; margin-top: 5px; }
+        button { width: 100%; padding: 12px; background-color: #004b93; color: white; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; font-weight: bold; }
         button:hover { background-color: #003366; }
-        .admin-btn { background-color: #28a745; margin-top: 10px; }
-        .admin-btn:hover { background-color: #218838; }
+        .table-responsive { overflow-x: auto; margin-top: 20px; }
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: center; font-size: 14px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: center; font-size: 12px; }
         th { background-color: #004b93; color: white; }
     </style>
 </head>
@@ -31,8 +31,8 @@
     </div>
 
     <div class="form-group">
-        <label for="courierPhone">رقم الموبايل:</label>
-        <input type="text" id="courierPhone" placeholder="أدخل رقم الموبايل الشخصي">
+        <label for="branchInput">الفرع:</label>
+        <input type="text" id="branchInput" placeholder="أدخل اسم الفرع">
     </div>
 
     <div class="form-group">
@@ -41,8 +41,8 @@
     </div>
 
     <div class="form-group">
-        <label for="branchInput">الفرع:</label>
-        <input type="text" id="branchInput" placeholder="أدخل اسم الفرع">
+        <label for="transferNumber">رقم التحويل:</label>
+        <input type="text" id="transferNumber" placeholder="رقم عملية التحويل">
     </div>
 
     <div class="form-group">
@@ -55,44 +55,29 @@
     </div>
 
     <div class="form-group">
-        <label for="advanceAmount">المبلغ:</label>
+        <label for="advanceAmount">مبلغ السلفة:</label>
         <input type="number" id="advanceAmount" placeholder="المبلغ بالجنيه">
     </div>
 
     <div class="form-group">
-        <label for="receiptImage">صورة القبض (الإيصال):</label>
+        <label for="receiptImage">صورة إيصال التحويل:</label>
         <input type="file" id="receiptImage" accept="image/*">
     </div>
 
-    <button type="button" onclick="submitSecureAdvance()">حفظ وإرسال الطلب</button>
-    <button type="button" class="admin-btn" onclick="toggleAdminView()">لوحة تحكم المحاسبين (عرض الطلبات)</button>
+    <button type="button" onclick="submitAdvanceDirect()">حفظ وإرسال الطلب</button>
 </div>
 
-<!-- لوحة عرض الطلبات للمحاسبين -->
-<div class="container" id="adminPanel" style="display: none;">
-    <h2>سجل طلبات السلف (خاص بالمحاسبين)</h2>
-    <div style="overflow-x: auto;">
-        <table>
-            <thead>
-                <tr>
-                    <th>المندوب</th>
-                    <th>الموبايل</th>
-                    <th>المبلغ</th>
-                    <th>الفرع</th>
-                    <th>الطريقة</th>
-                    <th>التاريخ</th>
-                </tr>
-            </thead>
-            <tbody id="advancesTableBody">
-                <!-- سيتم جلب الطلبات هنا -->
-            </tbody>
-        </table>
-    </div>
-</div>
-
+<!-- سكريبت تشغيل فايبريس وربط البيانات مع الحماية الأمنية للجهاز -->
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, getDocs, query, where, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { 
+        getFirestore, 
+        collection, 
+        addDoc,
+        getDocs,
+        query,
+        where 
+    } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyA777CDe0SySpJvH_7Fx7VsU1qcbFrQPVs",
@@ -107,6 +92,7 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
+    // توليد أو جلب بصمة فريدة للموبايل الحالي وتخزينها محلياً
     function getDeviceFingerprint() {
         let deviceId = localStorage.getItem('alfa_device_id');
         if (!deviceId) {
@@ -118,34 +104,36 @@
 
     const currentDeviceID = getDeviceFingerprint();
 
-    window.submitSecureAdvance = async function() {
+    window.submitAdvanceDirect = async function() {
         const nameInput = document.getElementById('courierName');
-        const phoneInput = document.getElementById('courierPhone');
-        const govInput = document.getElementById('governorateInput');
         const branchInput = document.getElementById('branchInput');
+        const govInput = document.getElementById('governorateInput');
+        const transferNumInput = document.getElementById('transferNumber');
         const transferMethodInput = document.getElementById('transferMethod');
         const amountInput = document.getElementById('advanceAmount');
         const receiptInput = document.getElementById('receiptImage');
 
-        if (!nameInput.value || !phoneInput.value || !govInput.value || !branchInput.value || !amountInput.value) {
+        if (!nameInput.value || !branchInput.value || !govInput.value || !transferNumInput.value || !transferMethodInput.value || !amountInput.value) {
             alert("برجاء ملء جميع الحقول المطلوبة!");
             return;
         }
 
         if (!receiptInput.files || receiptInput.files.length === 0) {
-            alert("برجاء إرفاق صورة القبض (الإيصال) أولاً!");
+            alert("برجاء إرفاق صورة الإيصال أولاً!");
             return;
         }
 
         const name = nameInput.value.trim();
-        const phone = phoneInput.value.trim();
-        const governorate = govInput.value.trim();
         const branch = branchInput.value.trim();
+        const governorate = govInput.value.trim();
+        const transferNumber = transferNumInput.value.trim();
         const transferMethod = transferMethodInput.value.trim();
         const amount = Number(amountInput.value);
+        const dateStr = new Date().toLocaleString('ar-EG');
         const fileName = receiptInput.files[0].name;
 
         try {
+            // التحقق مما إذا كان اسم المندوب مسجلاً بجهاز مختلف مسبقاً
             const q = query(collection(db, "advances"), where("name", "==", name));
             const querySnapshot = await getDocs(q);
 
@@ -158,67 +146,32 @@
             });
 
             if (registeredDevice && registeredDevice !== currentDeviceID) {
-                alert("⚠️ تنبيه أمني: هذا المندوب مسجل بالفعل على هاتف آخر! لا يمكن الإرسال.");
+                alert("⚠️ تنبيه أمني: هذا المندوب مسجل بالفعل على هاتف آخر! لا يمكن الإرسال من هذا الجهاز.");
                 return;
             }
 
+            // إرسال البيانات مع بصمة الجهاز الحالية
             await addDoc(collection(db, "advances"), {
                 name: name,
-                phone: phone,
-                governorate: governorate,
                 branch: branch,
+                governorate: governorate,
+                transferNumber: transferNumber,
                 transferMethod: transferMethod,
                 amount: amount,
                 receiptImageName: fileName,
                 deviceId: currentDeviceID,
                 createdAt: new Date(),
-                dateString: new Date().toLocaleString('ar-EG')
+                dateString: dateStr
             });
             
-            alert("تم إرسال الطلب وحفظه بنجاح!");
+            alert("تم إرسال الطلب وحفظه في فايربيس بنجاح!");
+            
             document.querySelector('.container').querySelectorAll('input[type="text"], input[type="number"], input[type="file"]').forEach(input => input.value = '');
 
         } catch (error) {
             alert("خطأ أثناء الحفظ: " + error.message);
         }
     };
-
-    window.toggleAdminView = async function() {
-        const panel = document.getElementById('adminPanel');
-        if (panel.style.display === 'none') {
-            panel.style.display = 'block';
-            await loadAdvancesForAdmin();
-        } else {
-            panel.style.display = 'none';
-        }
-    };
-
-    async function loadAdvancesForAdmin() {
-        const tbody = document.getElementById('advancesTableButton') || document.getElementById('advancesTableBody');
-        tbody.innerHTML = "<tr><td colspan='6'>جاري التحميل...</td></tr>";
-        try {
-            const querySnapshot = await getDocs(collection(db, "advances"));
-            tbody.innerHTML = "";
-            querySnapshot.forEach((doc) => {
-                const data = doc.data();
-                tbody.innerHTML += `
-                    <tr>
-                        <td>${data.name || ''}</td>
-                        <td>${data.phone || ''}</td>
-                        <td>${data.amount || ''}</td>
-                        <td>${data.branch || ''}</td>
-                        <td>${data.transferMethod || ''}</td>
-                        <td>${data.dateString || ''}</td>
-                    </tr>
-                `;
-            });
-            if (tbody.innerHTML === "") {
-                tbody.innerHTML = "<tr><td colspan='6'>لا توجد طلبات مسجلة حتى الآن</td></tr>";
-            }
-        } catch (error) {
-            tbody.innerHTML = "<tr><td colspan='6'>خطأ في جلب البيانات</td></tr>";
-        }
-    }
 </script>
 
 </body>
