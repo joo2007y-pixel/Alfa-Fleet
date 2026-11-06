@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>إدارة سلف المناديب - Alfa Fleet (محمي)</title>
+    <title>إدارة سلف المناديب - Alfa Fleet</title>
+    <!-- استايلات التصميم القديم والمنظم -->
     <style>
         body { font-family: Tahoma, sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; direction: rtl; }
         .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
@@ -19,28 +20,33 @@
 <body>
 
 <div class="container">
-    <h2>طلب سلفة لمناديب أصفا فليت (محمي ضد التلاعب)</h2>
+    <h2>طلب سلفة لمناديب أصفا فليت</h2>
     
+    <!-- 1. الاسم -->
     <div class="form-group">
         <label for="courierName">اسم المندوب:</label>
         <input type="text" id="courierName" placeholder="أدخل اسم المندوب ثلاثي">
     </div>
 
+    <!-- 2. رقم الموبايل -->
     <div class="form-group">
-        <label for="branchInput">الفرع:</label>
-        <input type="text" id="branchInput" placeholder="أدخل اسم الفرع">
+        <label for="courierPhone">رقم الموبايل:</label>
+        <input type="text" id="courierPhone" placeholder="أدخل رقم الموبايل الشخصي">
     </div>
 
+    <!-- 3. المحافظة -->
     <div class="form-group">
         <label for="governorateInput">المحافظة:</label>
         <input type="text" id="governorateInput" placeholder="أدخل المحافظة">
     </div>
 
+    <!-- 4. الفرع -->
     <div class="form-group">
-        <label for="transferNumber">رقم التحويل:</label>
-        <input type="text" id="transferNumber" placeholder="رقم عملية التحويل">
+        <label for="branchInput">الفرع:</label>
+        <input type="text" id="branchInput" placeholder="أدخل اسم الفرع">
     </div>
 
+    <!-- 5. طريقة التحويل -->
     <div class="form-group">
         <label for="transferMethod">طريقة التحويل:</label>
         <select id="transferMethod">
@@ -50,18 +56,20 @@
         </select>
     </div>
 
+    <!-- 6. المبلغ -->
     <div class="form-group">
-        <label for="advanceAmount">مبلغ السلفة:</label>
+        <label for="advanceAmount">المبلغ:</label>
         <input type="number" id="advanceAmount" placeholder="المبلغ بالجنيه">
     </div>
 
+    <!-- 7. صورة القبض / الإيصال -->
     <div class="form-group">
-        <label for="receiptImage">صورة إيصال التحويل:</label>
+        <label for="receiptImage">صورة القبض (الإيصال):</label>
         <input type="file" id="receiptImage" accept="image/*">
     </div>
 
-    <button type="button" onclick="submitSecureAdvance()">حفظ وإرسال الطلب بأمان</button>
-    <div class="device-info" id="deviceStatus">جاري التحقق من بصمة الجهاز...</div>
+    <button type="button" onclick="submitSecureAdvance()">حفظ وإرسال الطلب</button>
+    <div class="device-info" id="deviceStatus">جاري تأمين الجهاز...</div>
 </div>
 
 <script type="module">
@@ -81,7 +89,6 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // توليد أو جلب بصمة فريدة للموبايل الحالي
     function getDeviceFingerprint() {
         let deviceId = localStorage.getItem('alfa_device_id');
         if (!deviceId) {
@@ -92,37 +99,36 @@
     }
 
     const currentDeviceID = getDeviceFingerprint();
-    document.getElementById('deviceStatus').innerText = "معرّف الجهاز محمي ومؤمن على هذا الهاتف.";
+    document.getElementById('deviceStatus').innerText = "تم تأمين الجهاز بنجاح.";
 
     window.submitSecureAdvance = async function() {
         const nameInput = document.getElementById('courierName');
-        const branchInput = document.getElementById('branchInput');
+        const phoneInput = document.getElementById('courierPhone');
         const govInput = document.getElementById('governorateInput');
-        const transferNumInput = document.getElementById('transferNumber');
+        const branchInput = document.getElementById('branchInput');
         const transferMethodInput = document.getElementById('transferMethod');
         const amountInput = document.getElementById('advanceAmount');
         const receiptInput = document.getElementById('receiptImage');
 
-        if (!nameInput.value || !branchInput.value || !govInput.value || !transferNumInput.value || !amountInput.value) {
+        if (!nameInput.value || !phoneInput.value || !govInput.value || !branchInput.value || !amountInput.value) {
             alert("برجاء ملء جميع الحقول المطلوبة!");
             return;
         }
 
         if (!receiptInput.files || receiptInput.files.length === 0) {
-            alert("برجاء إرفاق صورة الإيصال أولاً!");
+            alert("برجاء إرفاق صورة القبض (الإيصال) أولاً!");
             return;
         }
 
         const name = nameInput.value.trim();
-        const branch = branchInput.value.trim();
+        const phone = phoneInput.value.trim();
         const governorate = govInput.value.trim();
-        const transferNumber = transferNumInput.value.trim();
+        const branch = branchInput.value.trim();
         const transferMethod = transferMethodInput.value.trim();
         const amount = Number(amountInput.value);
         const fileName = receiptInput.files[0].name;
 
         try {
-            // فحص هل الاسم ده متسجل قبل كده بجهاز مختلف؟
             const q = query(collection(db, "advances"), where("name", "==", name));
             const querySnapshot = await getDocs(q);
 
@@ -134,29 +140,26 @@
                 }
             });
 
-            // لو المندوب ده ليه جهاز قديم مسجل، لازم يكون هو نفس التليفون اللي بيبعت منه دلوقتي
             if (registeredDevice && registeredDevice !== currentDeviceID) {
-                alert("⚠️ تنبيه أمني: هذا المندوب مسجل بالفعل على هاتف آخر! لا يمكن الإرسال من هذا الجهاز.");
+                alert("⚠️ تنبيه أمني: هذا المندوب مسجل بالفعل على هاتف آخر! لا يمكن الإرسال.");
                 return;
             }
 
-            // لو الجهاز سليّم أو أول مرة يسجل، ابعت الطلب واحفظ بصمة جهازه
             await addDoc(collection(db, "advances"), {
                 name: name,
-                branch: branch,
+                phone: phone,
                 governorate: governorate,
-                transferNumber: transferNumber,
+                branch: branch,
                 transferMethod: transferMethod,
                 amount: amount,
                 receiptImageName: fileName,
-                deviceId: currentDeviceID, // ربط الطلب ببصمة الموبايل
+                deviceId: currentDeviceID,
                 createdAt: new Date(),
                 dateString: new Date().toLocaleString('ar-EG')
             });
             
-            alert("تم إرسال الطلب وتأكيد أمان جهاز المندوب بنجاح!");
+            alert("تم إرسال الطلب وحفظه بنجاح!");
             
-            // تفريغ الحقول
             document.querySelector('.container').querySelectorAll('input[type="text"], input[type="number"], input[type="file"]').forEach(input => input.value = '');
 
         } catch (error) {
