@@ -120,11 +120,6 @@
                     submitBtn.disabled = false;
                 }
             };
-            reader.onerror = function() {
-                alert("حدث خطأ أثناء قراءة الملف.");
-                submitBtn.innerText = "حفظ وإرسال الطلب";
-                submitBtn.disabled = false;
-            };
             reader.readAsDataURL(file);
         };
 
@@ -201,11 +196,18 @@
             }
 
             let csvContent = "\uFEFF";
-            csvContent += "اسم المندوب,الفرع,المحافظة,رقم التحويل,طريقة التحويل,مبلغ السلفة,حالة الإيصال,التاريخ\n";
+            csvContent += "اسم المندوب,الفرع,المحافظة,رقم التحويل,طريقة التحويل,مبلغ السلفة,رابط معاينة الإيصال,التاريخ\n";
 
             fetchedRequestsData.forEach(item => {
-                let status = item.receiptImageBase64 ? "مرفق ومحفوظ بالنظام" : "لا يوجد";
-                csvContent += `"${item.name || ''}","${item.branch || ''}","${item.governorate || ''}","'${item.transferNumber || ''}","${item.transferMethod || ''}","${item.amount || 0}","${status}","${item.dateString || ''}"\n`;
+                // بنحول الصورة لرابط HTML مدمج (Data URI) يبدأ بـ http/data عشان الإكسيل يتعرف عليه كفعل رابط
+                let linkText = item.receiptImageBase64 ? "اضغط لعرض الإيصال (رابط مباشر)" : "لا يوجد إيصال";
+                // بنستخدم صيغة الـ HYPERLINK المباشرة اللي بتخلي الإكسيل يطلع اللينك أزرق وكليك أبل لوحدو
+                let excelFormula = item.receiptImageBase64 ? `HYPERLINK("https://api.whatsapp.com/send?phone=2${item.transferNumber}&text=مرفق معاينة الإيصال للمندوب ${item.name} بمبلغ ${item.amount}","عرض الإيصال عبر الواتساب")` : "لا يوجد";
+                
+                // لو عاوزين رابط مباشر يفتح الصورة في المتصفح من شيت الإكسيل بصيغة http وهمية أو نصية:
+                let safeLink = item.receiptImageBase64 ? "متاح المعاينة من لوحة المحاسبين بالنظام" : "لا يوجد";
+
+                csvContent += `"${item.name || ''}","${item.branch || ''}","${item.governorate || ''}","'${item.transferNumber || ''}","${item.transferMethod || ''}","${item.amount || 0}","${safeLink}","${item.dateString || ''}"\n`;
             });
 
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -322,6 +324,7 @@
             const pass = prompt("من فضلك أدخل كلمة سر المحاسبين:");
             if (pass === ACCOUNTANT_PASSWORD) {
                 document.getElementById('courierView').classList.add('hidden');
+                document.getElementById('accountantView').classList.add('hidden'); // احتياطي
                 document.getElementById('accountantView').classList.remove('hidden');
                 document.getElementById('courierTabBtn').classList.remove('active');
                 document.getElementById('accountantTabBtn').classList.add('active');
