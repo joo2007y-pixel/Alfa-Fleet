@@ -178,7 +178,6 @@
             }
         };
 
-        // دالة تصدير الإكسيل المحدثة بروابط حقيقية لفتح الصور
         window.exportToExcel = function() {
             if (fetchedRequestsData.length === 0) {
                 alert("لا توجد بيانات لتصديرها!");
@@ -194,14 +193,14 @@
                 <th>رقم التحويل</th>
                 <th>طريقة التحويل</th>
                 <th>مبلغ السلفة</th>
-                <th>صورة الإيصال</th>
+                <th>صورة القبض</th>
                 <th>التاريخ</th>
             </tr>`;
 
             fetchedRequestsData.forEach(item => {
                 let receiptCell = "لا يوجد";
                 if (item.receiptImageBase64) {
-                    receiptCell = `<a href="${item.receiptImageBase64}" target="_blank">عرض الإيصال 🖼️</a>`;
+                    receiptCell = `<a href="${item.receiptImageBase64}">عرض الإيصال 🖼️</a>`;
                 }
 
                 htmlTable += `<tr>
@@ -209,52 +208,4 @@
                     <td>${item.branch || ''}</td>
                     <td>${item.governorate || ''}</td>
                     <td style="mso-number-format:'\@'">${item.transferNumber || ''}</td>
-                    <td>${item.transferMethod || ''}</td>
-                    <td>${item.amount || 0} ج.م</td>
-                    <td>${receiptCell}</td>
-                    <td>${item.dateString || ''}</td>
-                </tr>`;
-            });
-
-            htmlTable += `</table></body></html>`;
-
-            const blob = new Blob([htmlTable], { type: 'application/vnd.ms-excel;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement("a");
-            link.setAttribute("href", url);
-            link.setAttribute("download", `طلبات_السلف_ALFA_FLEET_${new Date().toLocaleDateString('ar-EG')}.xls`);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
-        };
-    </script>
-</head>
-<body>
-
-<div class="container">
-    <div class="header">
-        <div>
-            <h2>الهنا – ALFA FLEET</h2>
-            <p>نظام سلف المندوبين وإدارة الحسابات</p>
-        </div>
-        <div class="avatar">AF</div>
-    </div>
-
-    <div class="nav-tabs">
-        <button class="tab-btn active" id="courierTabBtn" onclick="switchView('courier')">تقديم طلب سلفة</button>
-        <button class="tab-btn" id="accountantTabBtn" onclick="switchView('accountant')">دخول المحاسبين 🔒</button>
-    </div>
-
-    <!-- صفحة المندوب -->
-    <div id="courierView" class="card">
-        <form id="advanceForm" onsubmit="event.preventDefault();">
-            <h3 class="card-title">بيانات الطلب</h3>
-            
-            <div class="input-group">
-                <label for="courierName">اسم المندوب *</label>
-                <input type="text" id="courierName" placeholder="اكتب اسمك رباعي" required>
-            </div>
-
-            <div class="input-group">
-                <label for="branchInput">الفرع / المنطقة *
+                    <td>${item.transferMethod || ''}
