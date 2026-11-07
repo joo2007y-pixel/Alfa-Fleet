@@ -60,7 +60,6 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // إرسال الطلب مع تحويل الصورة إلى Base64 لتخزينها مباشرة في Firestore بدون الحاجة لـ Storage
         window.submitAdvanceDirect = async function() {
             const nameInput = document.getElementById('courierName');
             const branchInput = document.getElementById('branchInput');
@@ -89,7 +88,6 @@
             const file = receiptInput.files[0];
             const dateStr = new Date().toLocaleString('ar-EG');
 
-            // إظهار شاشة النجاح فوراً للمندوب
             document.getElementById('advanceForm').reset();
             document.getElementById('advanceForm').style.display = "none";
             document.getElementById('successScreen').style.display = "block";
@@ -106,7 +104,7 @@
                         transferNumber: transferNumber,
                         transferMethod: transferMethod,
                         amount: amount,
-                        receiptImageBase64: base64Image, // حفظ الصورة كبيانات نصية مباشرة
+                        receiptImageBase64: base64Image,
                         createdAt: new Date(),
                         dateString: dateStr
                     });
@@ -152,7 +150,6 @@
                     fetchedRequestsData.push(data);
                     const currentIndex = index++;
 
-                    // زر لعرض الصورة المحفوظة في نافذة جديدة عند الضغط عليها
                     const imageBtn = data.receiptImageBase64 
                         ? `<button onclick="viewReceiptImage(${currentIndex})" style="background:#0066cc; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; font-weight:bold;">عرض الإيصال 🖼️</button>` 
                         : 'لا يوجد';
@@ -173,7 +170,6 @@
             });
         };
 
-        // دالة لفتح الصورة في نافذة جديدة للمحاسب
         window.viewReceiptImage = function(index) {
             const item = fetchedRequestsData[index];
             if (item && item.receiptImageBase64) {
@@ -182,24 +178,47 @@
             }
         };
 
+        // دالة تصدير شيت إكسيل جديدة بصيغة (.xls) منسقة
         window.exportToExcel = function() {
             if (fetchedRequestsData.length === 0) {
                 alert("لا توجد بيانات لتصديرها!");
                 return;
             }
 
-            let csvContent = "\uFEFF";
-            csvContent += "اسم المندوب,الفرع,المحافظة,رقم التحويل,طريقة التحويل,مبلغ السلفة,التاريخ\n";
+            let htmlTable = `<html dir="rtl"><head><meta charset="UTF-8"></head><body>`;
+            htmlTable += `<table border="1">`;
+            htmlTable += `<tr style="background:#004b93; color:white;">
+                <th>اسم المندوب</th>
+                <th>الفرع</th>
+                <th>المحافظة</th>
+                <th>رقم التحويل</th>
+                <th>طريقة التحويل</th>
+                <th>مبلغ السلفة</th>
+                <th>حالة الإيصال</th>
+                <th>التاريخ</th>
+            </tr>`;
 
             fetchedRequestsData.forEach(item => {
-                csvContent += `"${item.name || ''}","${item.branch || ''}","${item.governorate || ''}","'${item.transferNumber || ''}","${item.transferMethod || ''}","${item.amount || 0}","${item.dateString || ''}"\n`;
+                let receiptStatus = item.receiptImageBase64 ? "مرفق ومحفوظ بالنظام" : "لا يوجد";
+                htmlTable += `<tr>
+                    <td>${item.name || ''}</td>
+                    <td>${item.branch || ''}</td>
+                    <td>${item.governorate || ''}</td>
+                    <td style="mso-number-format:'\@'">${item.transferNumber || ''}</td>
+                    <td>${item.transferMethod || ''}</td>
+                    <td>${item.amount || 0} ج.م</td>
+                    <td>${receiptStatus}</td>
+                    <td>${item.dateString || ''}</td>
+                </tr>`;
             });
 
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            htmlTable += `</table></body></html>`;
+
+            const blob = new Blob([htmlTable], { type: 'application/vnd.ms-excel;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
             const link = document.createElement("a");
             link.setAttribute("href", url);
-            link.setAttribute("download", `طلبات_السلف_ALFA_FLEET_${new Date().toLocaleDateString('ar-EG')}.csv`);
+            link.setAttribute("download", `طلبات_السلف_ALFA_FLEET_${new Date().toLocaleDateString('ar-EG')}.xls`);
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
