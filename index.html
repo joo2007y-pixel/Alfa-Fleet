@@ -167,6 +167,9 @@
                     
                     tableBody.innerHTML += row;
                 });
+            }, (error) => {
+                console.error("خطأ في جلب البيانات:", error);
+                tableBody.innerHTML = '<tr><td colspan="8" style="color:red;">حدث خطأ أثناء تحميل البيانات!</td></tr>';
             });
         };
 
@@ -184,28 +187,143 @@
                 return;
             }
 
-            let htmlTable = `<html dir="rtl"><head><meta charset="UTF-8"></head><body>`;
-            htmlTable += `<table border="1">`;
-            htmlTable += `<tr style="background:#004b93; color:white;">
-                <th>اسم المندوب</th>
-                <th>الفرع</th>
-                <th>المحافظة</th>
-                <th>رقم التحويل</th>
-                <th>طريقة التحويل</th>
-                <th>مبلغ السلفة</th>
-                <th>صورة القبض</th>
-                <th>التاريخ</th>
-            </tr>`;
+            let csvContent = "\uFEFF";
+            csvContent += "اسم المندوب,الفرع,المحافظة,رقم التحويل,طريقة التحويل,مبلغ السلفة,حالة الإيصال,التاريخ\n";
 
             fetchedRequestsData.forEach(item => {
-                let receiptCell = "لا يوجد";
-                if (item.receiptImageBase64) {
-                    receiptCell = `<a href="${item.receiptImageBase64}">عرض الإيصال 🖼️</a>`;
-                }
+                let status = item.receiptImageBase64 ? "مرفق ومحفوظ بالنظام" : "لا يوجد";
+                csvContent += `"${item.name || ''}","${item.branch || ''}","${item.governorate || ''}","'${item.transferNumber || ''}","${item.transferMethod || ''}","${item.amount || 0}","${status}","${item.dateString || ''}"\n`;
+            });
 
-                htmlTable += `<tr>
-                    <td>${item.name || ''}</td>
-                    <td>${item.branch || ''}</td>
-                    <td>${item.governorate || ''}</td>
-                    <td style="mso-number-format:'\@'">${item.transferNumber || ''}</td>
-                    <td>${item.transferMethod || ''}
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", `طلبات_السلف_ALFA_FLEET_${new Date().toLocaleDateString('ar-EG')}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        };
+    </script>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <div>
+            <h2>الهنا – ALFA FLEET</h2>
+            <p>نظام سلف المندوبين وإدارة الحسابات</p>
+        </div>
+        <div class="avatar">AF</div>
+    </div>
+
+    <div class="nav-tabs">
+        <button class="tab-btn active" id="courierTabBtn" onclick="switchView('courier')">تقديم طلب سلفة</button>
+        <button class="tab-btn" id="accountantTabBtn" onclick="switchView('accountant')">دخول المحاسبين 🔒</button>
+    </div>
+
+    <!-- صفحة المندوب -->
+    <div id="courierView" class="card">
+        <form id="advanceForm" onsubmit="event.preventDefault();">
+            <h3 class="card-title">بيانات الطلب</h3>
+            
+            <div class="input-group">
+                <label for="courierName">اسم المندوب *</label>
+                <input type="text" id="courierName" placeholder="اكتب اسمك رباعي" required>
+            </div>
+
+            <div class="input-group">
+                <label for="branchInput">الفرع / المنطقة *</label>
+                <input type="text" id="branchInput" placeholder="اكتب اسم الفرع أو المنطقة" required>
+            </div>
+
+            <div class="input-group">
+                <label for="governorateInput">المحافظة *</label>
+                <input type="text" id="governorateInput" placeholder="اكتب اسم المحافظة" required>
+            </div>
+
+            <div class="input-group">
+                <label for="transferNumber">رقم التحويل *</label>
+                <input type="tel" id="transferNumber" placeholder="مثال: 010xxxxxxxx" required dir="ltr">
+            </div>
+
+            <div class="input-group">
+                <label for="transferMethod">طريقة التحويل *</label>
+                <input type="text" id="transferMethod" placeholder="مثال: فودافون كاش / إنستاباي..." required>
+            </div>
+
+            <div class="input-group">
+                <label for="advanceAmount">مبلغ السلفة (جنيه) *</label>
+                <input type="number" id="advanceAmount" placeholder="مثال: 500" required>
+            </div>
+
+            <div class="input-group">
+                <label for="receiptImage">صورة القبض / الإيصال *</label>
+                <input type="file" id="receiptImage" accept="image/*" required>
+            </div>
+
+            <button type="button" id="submitBtn" class="btn-submit" onclick="submitAdvanceDirect()">حفظ وإرسال الطلب</button>
+        </form>
+
+        <!-- شاشة النجاح -->
+        <div id="successScreen" class="success-screen">
+            <div class="success-icon">✅</div>
+            <div class="success-title">تم حفظ وإرسال الطلب بنجاح!</div>
+            <div class="success-desc">عاش يا <span id="courierNameSuccess"></span>، الطلب اتسجل ووصل للمحاسبين بنجاح.</div>
+            <button class="btn-reset" onclick="resetFormView()">تقديم طلب سلفة جديد ➕</button>
+        </div>
+    </div>
+
+    <!-- صفحة المحاسبين -->
+    <div id="accountantView" class="card hidden">
+        <div class="card-title">
+            <span>لوحة المحاسبين - طلبات السُلف</span>
+            <button class="btn-excel" onclick="exportToExcel()">📊 تحميل شيت إكسيل</button>
+        </div>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>اسم المندوب</th>
+                        <th>الفرع</th>
+                        <th>المحافظة</th>
+                        <th>رقم التحويل</th>
+                        <th>طريقة التحويل</th>
+                        <th>المبلغ</th>
+                        <th>صورة القبض</th>
+                        <th>التاريخ</th>
+                    </tr>
+                </thead>
+                <tbody id="requestsTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    const ACCOUNTANT_PASSWORD = "55555";
+
+    function switchView(view) {
+        if (view === 'accountant') {
+            const pass = prompt("من فضلك أدخل كلمة سر المحاسبين:");
+            if (pass === ACCOUNTANT_PASSWORD) {
+                document.getElementById('courierView').classList.add('hidden');
+                document.getElementById('accountantView').classList.remove('hidden');
+                document.getElementById('courierTabBtn').classList.remove('active');
+                document.getElementById('accountantTabBtn').classList.add('active');
+                window.loadRequests();
+            } else if (pass !== null) {
+                alert("كلمة السر خاطئة!");
+            }
+        } else {
+            document.getElementById('accountantView').classList.add('hidden');
+            document.getElementById('courierView').classList.remove('hidden');
+            document.getElementById('accountantTabBtn').classList.remove('active');
+            document.getElementById('courierTabBtn').classList.add('active');
+        }
+    }
+</script>
+
+</body>
+</html>
