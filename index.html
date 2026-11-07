@@ -195,26 +195,37 @@
                 return;
             }
 
-            let csvContent = "\uFEFF";
-            csvContent += "اسم المندوب,الفرع,المحافظة,رقم التحويل,طريقة التحويل,مبلغ السلفة,رابط معاينة الإيصال,التاريخ\n";
+            // بنعمل ملف جدول إكسيل حقيقي (.xls) مدمج بـ HTML وخلايا تفاعلية
+            let htmlContent = `<html dir="rtl"><head><meta charset="UTF-8"><style>table{border-collapse:collapse;width:100%;}th,td{border:1px solid #ddd;padding:8px;text-align:center;font-family:Arial;}th{background-color:#004b93;color:white;}</style></head><body>`;
+            htmlContent += `<table><thead><tr><th>اسم المندوب</th><th>الفرع</th><th>المحافظة</th><th>رقم التحويل</th><th>طريقة التحويل</th><th>المبلغ</th><th>معاينة الإيصال</th><th>التاريخ</th></tr></thead><tbody>`;
 
-            fetchedRequestsData.forEach(item => {
-                // بنحول الصورة لرابط HTML مدمج (Data URI) يبدأ بـ http/data عشان الإكسيل يتعرف عليه كفعل رابط
-                let linkText = item.receiptImageBase64 ? "اضغط لعرض الإيصال (رابط مباشر)" : "لا يوجد إيصال";
-                // بنستخدم صيغة الـ HYPERLINK المباشرة اللي بتخلي الإكسيل يطلع اللينك أزرق وكليك أبل لوحدو
-                let excelFormula = item.receiptImageBase64 ? `HYPERLINK("https://api.whatsapp.com/send?phone=2${item.transferNumber}&text=مرفق معاينة الإيصال للمندوب ${item.name} بمبلغ ${item.amount}","عرض الإيصال عبر الواتساب")` : "لا يوجد";
-                
-                // لو عاوزين رابط مباشر يفتح الصورة في المتصفح من شيت الإكسيل بصيغة http وهمية أو نصية:
-                let safeLink = item.receiptImageBase64 ? "متاح المعاينة من لوحة المحاسبين بالنظام" : "لا يوجد";
+            fetchedRequestsData.forEach((item, index) => {
+                // بنعمل رابط ويب حقيقي بـ Data URI يفتح الصورة في نافذة جديدة مباشرة أول المحاسب ما يدوس عليه في الإكسيل
+                let imageCell = "لا يوجد";
+                if (item.receiptImageBase64) {
+                    // رابط HTML يعرض الصورة في صفحة مستقلة عند الضغط عليه من الإكسيل
+                    imageCell = `<a href="${item.receiptImageBase64}" target="_blank" style="color:blue; text-decoration:underline; font-weight:bold;">فتح الإيصال 🖼️</a>`;
+                }
 
-                csvContent += `"${item.name || ''}","${item.branch || ''}","${item.governorate || ''}","'${item.transferNumber || ''}","${item.transferMethod || ''}","${item.amount || 0}","${safeLink}","${item.dateString || ''}"\n`;
+                htmlContent += `<tr>
+                    <td>${item.name || ''}</td>
+                    <td>${item.branch || ''}</td>
+                    <td>${item.governorate || ''}</td>
+                    <td style="mso-number-format:'\@';">${item.transferNumber || ''}</td>
+                    <td>${item.transferMethod || ''}</td>
+                    <td>${item.amount || 0}</td>
+                    <td>${imageCell}</td>
+                    <td>${item.dateString || ''}</td>
+                </tr>`;
             });
 
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            htmlContent += `</tbody></table></body></html>`;
+
+            const blob = new Blob([htmlContent], { type: 'application/vnd.ms-excel;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
             const link = document.createElement("a");
             link.setAttribute("href", url);
-            link.setAttribute("download", `طلبات_السلف_ALFA_FLEET_${new Date().toLocaleDateString('ar-EG')}.csv`);
+            link.setAttribute("download", `طلبات_السلف_ALFA_FLEET_${new Date().toLocaleDateString('ar-EG')}.xls`);
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
@@ -306,7 +317,7 @@
                         <th>رقم التحويل</th>
                         <th>طريقة التحويل</th>
                         <th>المبلغ</th>
-                        <th>صورة القبض</th>
+                        <th>معاينة الإيصال</th>
                         <th>التاريخ</th>
                     </tr>
                 </thead>
@@ -324,7 +335,6 @@
             const pass = prompt("من فضلك أدخل كلمة سر المحاسبين:");
             if (pass === ACCOUNTANT_PASSWORD) {
                 document.getElementById('courierView').classList.add('hidden');
-                document.getElementById('accountantView').classList.add('hidden'); // احتياطي
                 document.getElementById('accountantView').classList.remove('hidden');
                 document.getElementById('courierTabBtn').classList.remove('active');
                 document.getElementById('accountantTabBtn').classList.add('active');
