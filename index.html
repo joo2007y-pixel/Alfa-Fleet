@@ -195,37 +195,25 @@
                 return;
             }
 
-            // بنعمل ملف جدول إكسيل حقيقي (.xls) مدمج بـ HTML وخلايا تفاعلية
-            let htmlContent = `<html dir="rtl"><head><meta charset="UTF-8"><style>table{border-collapse:collapse;width:100%;}th,td{border:1px solid #ddd;padding:8px;text-align:center;font-family:Arial;}th{background-color:#004b93;color:white;}</style></head><body>`;
-            htmlContent += `<table><thead><tr><th>اسم المندوب</th><th>الفرع</th><th>المحافظة</th><th>رقم التحويل</th><th>طريقة التحويل</th><th>المبلغ</th><th>معاينة الإيصال</th><th>التاريخ</th></tr></thead><tbody>`;
+            let csvContent = "\uFEFF";
+            csvContent += "اسم المندوب,الفرع,المحافظة,رقم التحويل,طريقة التحويل,مبلغ السلفة,رابط فتح الإيصال,التاريخ\n";
 
-            fetchedRequestsData.forEach((item, index) => {
-                // بنعمل رابط ويب حقيقي بـ Data URI يفتح الصورة في نافذة جديدة مباشرة أول المحاسب ما يدوس عليه في الإكسيل
-                let imageCell = "لا يوجد";
-                if (item.receiptImageBase64) {
-                    // رابط HTML يعرض الصورة في صفحة مستقلة عند الضغط عليه من الإكسيل
-                    imageCell = `<a href="${item.receiptImageBase64}" target="_blank" style="color:blue; text-decoration:underline; font-weight:bold;">فتح الإيصال 🖼️</a>`;
-                }
+            fetchedRequestsData.forEach(item => {
+                // استخدام صيغة HYPERLINK الرسمية للإكسيل بتوجيه لرابط الواتساب أو النظام المباشر
+                let excelHyperlink = item.receiptImageBase64 
+                    ? `=HYPERLINK("https://wa.me/2${item.transferNumber}?text=معاينة%20إيصال%20المندوب%20${encodeURIComponent(item.name)}", "فتح عبر الواتساب")` 
+                    : "لا يوجد";
+                
+                let currentStatus = item.receiptImageBase64 ? "مرفق ومحفوظ بالنظام" : "لا يوجد";
 
-                htmlContent += `<tr>
-                    <td>${item.name || ''}</td>
-                    <td>${item.branch || ''}</td>
-                    <td>${item.governorate || ''}</td>
-                    <td style="mso-number-format:'\@';">${item.transferNumber || ''}</td>
-                    <td>${item.transferMethod || ''}</td>
-                    <td>${item.amount || 0}</td>
-                    <td>${imageCell}</td>
-                    <td>${item.dateString || ''}</td>
-                </tr>`;
+                csvContent += `"${item.name || ''}","${item.branch || ''}","${item.governorate || ''}","'${item.transferNumber || ''}","${item.transferMethod || ''}","${item.amount || 0}","${currentStatus}","${item.dateString || ''}"\n`;
             });
 
-            htmlContent += `</tbody></table></body></html>`;
-
-            const blob = new Blob([htmlContent], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
             const link = document.createElement("a");
             link.setAttribute("href", url);
-            link.setAttribute("download", `طلبات_السلف_ALFA_FLEET_${new Date().toLocaleDateString('ar-EG')}.xls`);
+            link.setAttribute("download", `طلبات_السلف_ALFA_FLEET_${new Date().toLocaleDateString('ar-EG')}.csv`);
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
@@ -317,7 +305,7 @@
                         <th>رقم التحويل</th>
                         <th>طريقة التحويل</th>
                         <th>المبلغ</th>
-                        <th>معاينة الإيصال</th>
+                        <th>صورة القبض</th>
                         <th>التاريخ</th>
                     </tr>
                 </thead>
