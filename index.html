@@ -1,322 +1,643 @@
 <!DOCTYPE html>
+
 <html lang="ar" dir="rtl">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ALFA FLEET - نظام سلف المندوبين</title>
-    <style>
-        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; }
-        body { background-color: #f4f7f6; padding: 20px; }
-        .container { max-width: 750px; margin: 0 auto; }
-        .header { background-color: #004b93; color: white; padding: 15px 25px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .header h2 { font-size: 18px; }
-        .header p { font-size: 11px; opacity: 0.8; margin-top: 4px; }
-        .avatar { background-color: white; color: #004b93; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; }
-        .nav-tabs { display: flex; gap: 10px; margin-bottom: 15px; }
-        .tab-btn { flex: 1; padding: 10px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; background: #e0e0e0; color: #333; }
-        .tab-btn.active { background: #0066cc; color: white; }
-        .card { background: white; padding: 25px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
-        .card-title { color: #1a252f; font-size: 20px; margin-bottom: 20px; border-bottom: 2px solid #f0f0f0; padding-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
-        .input-group { margin-bottom: 15px; }
-        .input-group label { display: block; font-size: 14px; font-weight: bold; color: #333; margin-bottom: 5px; }
-        .input-group input { width: 100%; padding: 12px; border: 1px solid #ced4da; border-radius: 8px; font-size: 16px; outline: none; text-align: right; }
-        .btn-submit { width: 100%; padding: 14px; background-color: #28a745; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
-        .btn-submit:hover { background-color: #218838; }
-        .btn-submit:disabled { opacity: 0.7; cursor: not-allowed; }
-        .btn-excel { background-color: #1d6f42; color: white; border: none; padding: 8px 15px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; }
-        .success-screen { text-align: center; padding: 40px 20px; display: none; }
-        .success-icon { font-size: 60px; color: #28a745; margin-bottom: 15px; }
-        .success-title { font-size: 22px; color: #155724; margin-bottom: 10px; font-weight: bold; }
-        .success-desc { font-size: 15px; color: #555; margin-bottom: 25px; }
-        .btn-reset { padding: 12px 25px; background-color: #0066cc; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 15px; }
-        .table-responsive { overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: center; font-size: 12px; white-space: nowrap; }
-        th { background-color: #004b93; color: white; }
-        .hidden { display: none; }
-        .loading-text { text-align: center; color: #666; font-style: italic; }
-    </style>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { 
-            getFirestore, 
-            collection, 
-            addDoc, 
-            onSnapshot, 
-            query, 
-            orderBy 
-        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    <meta charset="UTF-8">
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyA777CDe0SySpJvH_7Fx7VsU1qcbFrQPVs",
-            authDomain: "alfa-fleet-bcfee.firebaseapp.com",
-            projectId: "alfa-fleet-bcfee",
-            storageBucket: "alfa-fleet-bcfee.firebasestorage.app",
-            messagingSenderId: "631813591",
-            appId: "1:631813591:web:32567bb83783ab5bd1c792",
-            measurementId: "G-0C2HWMLXFF"
-        };
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+    <title>ALFA FLEET - نظام سلف المندوبين</title>
 
-        // إرسال الطلب وإظهار شاشة النجاح فوراً لمنع التعليق
-        window.submitAdvanceDirect = async function() {
-            const submitBtn = document.getElementById('submitBtn');
-            const nameInput = document.getElementById('courierName');
-            const branchInput = document.getElementById('branchInput');
-            const govInput = document.getElementById('governorateInput');
-            const transferNumInput = document.getElementById('transferNumber');
-            const transferMethodInput = document.getElementById('transferMethod');
-            const amountInput = document.getElementById('advanceAmount');
-            const receiptInput = document.getElementById('receiptImage');
+    <style>
 
-            // التحقق من الحقول الإجبارية
-            if (!nameInput.value || !branchInput.value || !govInput.value || !transferNumInput.value || !transferMethodInput.value || !amountInput.value) {
-                alert("برجاء ملء جميع الحقول المطلوبة!");
-                return;
-            }
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; }
 
-            if (!receiptInput.files || receiptInput.files.length === 0) {
-                alert("برجاء إرفاق صورة القبض أولاً!");
-                return;
-            }
+        body { background-color: #f4f7f6; padding: 20px; }
 
-            const name = nameInput.value.trim();
-            const branch = branchInput.value.trim();
-            const governorate = govInput.value.trim();
-            const transferNumber = transferNumInput.value.trim();
-            const transferMethod = transferMethodInput.value.trim();
-            const amount = Number(amountInput.value);
-            const dateStr = new Date().toLocaleString('ar-EG');
-            const fileName = receiptInput.files[0].name;
+        .container { max-width: 750px; margin: 0 auto; }
 
-            // إظهار شاشة النجاح وتصفير النموذج فوراً للمستخدم بدون انتظار السيرفر
-            document.getElementById('advanceForm').reset();
-            document.getElementById('advanceForm').style.display = "none";
-            document.getElementById('successScreen').style.display = "block";
-            document.getElementById('courierNameSuccess').innerText = name;
+        .header { background-color: #004b93; color: white; padding: 15px 25px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
 
-            try {
-                // إرسال البيانات في الخلفية بصمت تام للمحاسب
-                await addDoc(collection(db, "advances"), {
-                    name: name,
-                    branch: branch,
-                    governorate: governorate,
-                    transferNumber: transferNumber,
-                    transferMethod: transferMethod,
-                    amount: amount,
-                    receiptImageName: fileName,
-                    createdAt: new Date(),
-                    dateString: dateStr
-                });
-            } catch (error) {
-                console.error("خطأ في الخلفية:", error);
-            }
-        };
+        .header h2 { font-size: 18px; }
 
-        // زر تقديم طلب سلفة جديد لتصفير الشاشة والعودة للنموذج
-        window.resetFormView = function() {
-            document.getElementById('advanceForm').reset();
-            
-            const submitBtn = document.getElementById('submitBtn');
-            submitBtn.innerText = "حفظ وإرسال الطلب";
-            submitBtn.disabled = false;
+        .header p { font-size: 11px; opacity: 0.8; margin-top: 4px; }
 
-            document.getElementById('successScreen').style.display = "none";
-            document.getElementById('advanceForm').style.display = "block";
-        };
+        .avatar { background-color: white; color: #004b93; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; }
 
-        // متابعة الطلبات لحظياً عند المحاسب
-        let fetchedRequestsData = [];
-        let unsubscribeRequests = null;
+        .nav-tabs { display: flex; gap: 10px; margin-bottom: 15px; }
 
-        window.loadRequests = function() {
-            const tableBody = document.getElementById('requestsTableBody');
-            tableBody.innerHTML = '<tr><td colspan="8" class="loading-text">جاري تحميل البيانات من السيرفر...</td></tr>';
+        .tab-btn { flex: 1; padding: 10px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; background: #e0e0e0; color: #333; }
 
-            if (unsubscribeRequests) {
-                unsubscribeRequests();
-                unsubscribeRequests = null;
-            }
+        .tab-btn.active { background: #0066cc; color: white; }
 
-            const q = query(collection(db, "advances"), orderBy("createdAt", "desc"));
+        .card { background: white; padding: 25px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
 
-            unsubscribeRequests = onSnapshot(q, (querySnapshot) => {
-                tableBody.innerHTML = '';
-                fetchedRequestsData = [];
+        .card-title { color: #1a252f; font-size: 20px; margin-bottom: 20px; border-bottom: 2px solid #f0f0f0; padding-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
 
-                if (querySnapshot.empty) {
-                    tableBody.innerHTML = '<tr><td colspan="8">لا توجد طلبات مسجلة حتى الآن</td></tr>';
-                    return;
-                }
+        .input-group { margin-bottom: 15px; }
 
-                querySnapshot.forEach((doc) => {
-                    const data = doc.data();
-                    fetchedRequestsData.push(data);
+        .input-group label { display: block; font-size: 14px; font-weight: bold; color: #333; margin-bottom: 5px; }
 
-                    const row = `<tr>
-                        <td>${data.name || ''}</td>
-                        <td>${data.branch || ''}</td>
-                        <td>${data.governorate || ''}</td>
-                        <td dir="ltr">${data.transferNumber || ''}</td>
-                        <td>${data.transferMethod || ''}</td>
-                        <td>${data.amount || 0} ج.م</td>
-                        <td>${data.receiptImageName || 'مرفق'}</td>
-                        <td>${data.dateString || ''}</td>
-                    </tr>`;
-                    
-                    tableBody.innerHTML += row;
-                });
-            }, (error) => {
-                console.error("خطأ في جلب البيانات:", error);
-                tableBody.innerHTML = '<tr><td colspan="8" style="color:red;">حدث خطأ أثناء تحميل البيانات!</td></tr>';
-            });
-        };
+        .input-group input { width: 100%; padding: 12px; border: 1px solid #ced4da; border-radius: 8px; font-size: 16px; outline: none; text-align: right; }
 
-        window.exportToExcel = function() {
-            if (fetchedRequestsData.length === 0) {
-                alert("لا توجد بيانات لتصديرها!");
-                return;
-            }
+        .btn-submit { width: 100%; padding: 14px; background-color: #28a745; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
 
-            let csvContent = "\uFEFF";
-            csvContent += "اسم المندوب,الفرع,المحافظة,رقم التحويل,طريقة التحويل,مبلغ السلفة,التاريخ\n";
+        .btn-submit:hover { background-color: #218838; }
 
-            fetchedRequestsData.forEach(item => {
-                csvContent += `"${item.name || ''}","${item.branch || ''}","${item.governorate || ''}","'${item.transferNumber || ''}","${item.transferMethod || ''}","${item.amount || 0}","${item.dateString || ''}"\n`;
-            });
+        .btn-submit:disabled { opacity: 0.7; cursor: not-allowed; }
 
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement("a");
-            link.setAttribute("href", url);
-            link.setAttribute("download", `طلبات_السلف_ALFA_FLEET_${new Date().toLocaleDateString('ar-EG')}.csv`);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
-        };
-    </script>
+        .btn-excel { background-color: #1d6f42; color: white; border: none; padding: 8px 15px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; }
+
+        .success-screen { text-align: center; padding: 40px 20px; display: none; }
+
+        .success-icon { font-size: 60px; color: #28a745; margin-bottom: 15px; }
+
+        .success-title { font-size: 22px; color: #155724; margin-bottom: 10px; font-weight: bold; }
+
+        .success-desc { font-size: 15px; color: #555; margin-bottom: 25px; }
+
+        .btn-reset { padding: 12px 25px; background-color: #0066cc; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 15px; }
+
+        .table-responsive { overflow-x: auto; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: center; font-size: 12px; white-space: nowrap; }
+
+        th { background-color: #004b93; color: white; }
+
+        .hidden { display: none; }
+
+        .loading-text { text-align: center; color: #666; font-style: italic; }
+
+    </style>
+
+
+
+    <script type="module">
+
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+
+        import { 
+
+            getFirestore, 
+
+            collection, 
+
+            addDoc, 
+
+            onSnapshot, 
+
+            query, 
+
+            orderBy 
+
+        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+
+
+        const firebaseConfig = {
+
+            apiKey: "AIzaSyA777CDe0SySpJvH_7Fx7VsU1qcbFrQPVs",
+
+            authDomain: "alfa-fleet-bcfee.firebaseapp.com",
+
+            projectId: "alfa-fleet-bcfee",
+
+            storageBucket: "alfa-fleet-bcfee.firebasestorage.app",
+
+            messagingSenderId: "631813591",
+
+            appId: "1:631813591:web:32567bb83783ab5bd1c792",
+
+            measurementId: "G-0C2HWMLXFF"
+
+        };
+
+
+
+        const app = initializeApp(firebaseConfig);
+
+        const db = getFirestore(app);
+
+
+
+        // إرسال الطلب وإظهار شاشة النجاح فوراً لمنع التعليق
+
+        window.submitAdvanceDirect = async function() {
+
+            const submitBtn = document.getElementById('submitBtn');
+
+            const nameInput = document.getElementById('courierName');
+
+            const branchInput = document.getElementById('branchInput');
+
+            const govInput = document.getElementById('governorateInput');
+
+            const transferNumInput = document.getElementById('transferNumber');
+
+            const transferMethodInput = document.getElementById('transferMethod');
+
+            const amountInput = document.getElementById('advanceAmount');
+
+            const receiptInput = document.getElementById('receiptImage');
+
+
+
+            // التحقق من الحقول الإجبارية
+
+            if (!nameInput.value || !branchInput.value || !govInput.value || !transferNumInput.value || !transferMethodInput.value || !amountInput.value) {
+
+                alert("برجاء ملء جميع الحقول المطلوبة!");
+
+                return;
+
+            }
+
+
+
+            if (!receiptInput.files || receiptInput.files.length === 0) {
+
+                alert("برجاء إرفاق صورة القبض أولاً!");
+
+                return;
+
+            }
+
+
+
+            const name = nameInput.value.trim();
+
+            const branch = branchInput.value.trim();
+
+            const governorate = govInput.value.trim();
+
+            const transferNumber = transferNumInput.value.trim();
+
+            const transferMethod = transferMethodInput.value.trim();
+
+            const amount = Number(amountInput.value);
+
+            const dateStr = new Date().toLocaleString('ar-EG');
+
+            const fileName = receiptInput.files[0].name;
+
+
+
+            // إظهار شاشة النجاح وتصفير النموذج فوراً للمستخدم بدون انتظار السيرفر
+
+            document.getElementById('advanceForm').reset();
+
+            document.getElementById('advanceForm').style.display = "none";
+
+            document.getElementById('successScreen').style.display = "block";
+
+            document.getElementById('courierNameSuccess').innerText = name;
+
+
+
+            try {
+
+                // إرسال البيانات في الخلفية بصمت تام للمحاسب
+
+                await addDoc(collection(db, "advances"), {
+
+                    name: name,
+
+                    branch: branch,
+
+                    governorate: governorate,
+
+                    transferNumber: transferNumber,
+
+                    transferMethod: transferMethod,
+
+                    amount: amount,
+
+                    receiptImageName: fileName,
+
+                    createdAt: new Date(),
+
+                    dateString: dateStr
+
+                });
+
+            } catch (error) {
+
+                console.error("خطأ في الخلفية:", error);
+
+            }
+
+        };
+
+
+
+        // زر تقديم طلب سلفة جديد لتصفير الشاشة والعودة للنموذج
+
+        window.resetFormView = function() {
+
+            document.getElementById('advanceForm').reset();
+
+            
+
+            const submitBtn = document.getElementById('submitBtn');
+
+            submitBtn.innerText = "حفظ وإرسال الطلب";
+
+            submitBtn.disabled = false;
+
+
+
+            document.getElementById('successScreen').style.display = "none";
+
+            document.getElementById('advanceForm').style.display = "block";
+
+        };
+
+
+
+        // متابعة الطلبات لحظياً عند المحاسب
+
+        let fetchedRequestsData = [];
+
+        let unsubscribeRequests = null;
+
+
+
+        window.loadRequests = function() {
+
+            const tableBody = document.getElementById('requestsTableBody');
+
+            tableBody.innerHTML = '<tr><td colspan="8" class="loading-text">جاري تحميل البيانات من السيرفر...</td></tr>';
+
+
+
+            if (unsubscribeRequests) {
+
+                unsubscribeRequests();
+
+                unsubscribeRequests = null;
+
+            }
+
+
+
+            const q = query(collection(db, "advances"), orderBy("createdAt", "desc"));
+
+
+
+            unsubscribeRequests = onSnapshot(q, (querySnapshot) => {
+
+                tableBody.innerHTML = '';
+
+                fetchedRequestsData = [];
+
+
+
+                if (querySnapshot.empty) {
+
+                    tableBody.innerHTML = '<tr><td colspan="8">لا توجد طلبات مسجلة حتى الآن</td></tr>';
+
+                    return;
+
+                }
+
+
+
+                querySnapshot.forEach((doc) => {
+
+                    const data = doc.data();
+
+                    fetchedRequestsData.push(data);
+
+
+
+                    const row = `<tr>
+
+                        <td>${data.name || ''}</td>
+
+                        <td>${data.branch || ''}</td>
+
+                        <td>${data.governorate || ''}</td>
+
+                        <td dir="ltr">${data.transferNumber || ''}</td>
+
+                        <td>${data.transferMethod || ''}</td>
+
+                        <td>${data.amount || 0} ج.م</td>
+
+                        <td>${data.receiptImageName || 'مرفق'}</td>
+
+                        <td>${data.dateString || ''}</td>
+
+                    </tr>`;
+
+                    
+
+                    tableBody.innerHTML += row;
+
+                });
+
+            }, (error) => {
+
+                console.error("خطأ في جلب البيانات:", error);
+
+                tableBody.innerHTML = '<tr><td colspan="8" style="color:red;">حدث خطأ أثناء تحميل البيانات!</td></tr>';
+
+            });
+
+        };
+
+
+
+        window.exportToExcel = function() {
+
+            if (fetchedRequestsData.length === 0) {
+
+                alert("لا توجد بيانات لتصديرها!");
+
+                return;
+
+            }
+
+
+
+            let csvContent = "\uFEFF";
+
+            csvContent += "اسم المندوب,الفرع,المحافظة,رقم التحويل,طريقة التحويل,مبلغ السلفة,التاريخ\n";
+
+
+
+            fetchedRequestsData.forEach(item => {
+
+                csvContent += `"${item.name || ''}","${item.branch || ''}","${item.governorate || ''}","'${item.transferNumber || ''}","${item.transferMethod || ''}","${item.amount || 0}","${item.dateString || ''}"\n`;
+
+            });
+
+
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+
+            const url = URL.createObjectURL(blob);
+
+            const link = document.createElement("a");
+
+            link.setAttribute("href", url);
+
+            link.setAttribute("download", `طلبات_السلف_ALFA_FLEET_${new Date().toLocaleDateString('ar-EG')}.csv`);
+
+            document.body.appendChild(link);
+
+            link.click();
+
+            document.body.removeChild(link);
+
+            URL.revokeObjectURL(url);
+
+        };
+
+    </script>
+
 </head>
+
 <body>
 
+
+
 <div class="container">
-    <div class="header">
-        <div>
-            <h2>الهنا – ALFA FLEET</h2>
-            <p>نظام سلف المندوبين وإدارة الحسابات</p>
-        </div>
-        <div class="avatar">AF</div>
-    </div>
 
-    <div class="nav-tabs">
-        <button class="tab-btn active" id="courierTabBtn" onclick="switchView('courier')">تقديم طلب سلفة</button>
-        <button class="tab-btn" id="accountantTabBtn" onclick="switchView('accountant')">دخول المحاسبين 🔒</button>
-    </div>
+    <div class="header">
 
-    <!-- صفحة المندوب -->
-    <div id="courierView" class="card">
-        <form id="advanceForm" onsubmit="event.preventDefault();">
-            <h3 class="card-title">بيانات الطلب</h3>
-            
-            <div class="input-group">
-                <label for="courierName">اسم المندوب *</label>
-                <input type="text" id="courierName" placeholder="اكتب اسمك رباعي" required>
-            </div>
+        <div>
 
-            <div class="input-group">
-                <label for="branchInput">الفرع / المنطقة *</label>
-                <input type="text" id="branchInput" placeholder="اكتب اسم الفرع أو المنطقة" required>
-            </div>
+            <h2>الهنا – ALFA FLEET</h2>
 
-            <div class="input-group">
-                <label for="governorateInput">المحافظة *</label>
-                <input type="text" id="governorateInput" placeholder="اكتب اسم المحافظة" required>
-            </div>
+            <p>نظام سلف المندوبين وإدارة الحسابات</p>
 
-            <div class="input-group">
-                <label for="transferNumber">رقم التحويل *</label>
-                <input type="tel" id="transferNumber" placeholder="مثال: 010xxxxxxxx" required dir="ltr">
-            </div>
+        </div>
 
-            <div class="input-group">
-                <label for="transferMethod">طريقة التحويل *</label>
-                <input type="text" id="transferMethod" placeholder="مثال: فودافون كاش / إنستاباي..." required>
-            </div>
+        <div class="avatar">AF</div>
 
-            <div class="input-group">
-                <label for="advanceAmount">مبلغ السلفة (جنيه) *</label>
-                <input type="number" id="advanceAmount" placeholder="مثال: 500" required>
-            </div>
+    </div>
 
-            <div class="input-group">
-                <label for="receiptImage">صورة القبض / الإيصال *</label>
-                <input type="file" id="receiptImage" accept="image/*" required>
-            </div>
 
-            <button type="button" id="submitBtn" class="btn-submit" onclick="submitAdvanceDirect()">حفظ وإرسال الطلب</button>
-        </form>
 
-        <!-- شاشة النجاح -->
-        <div id="successScreen" class="success-screen">
-            <div class="success-icon">✅</div>
-            <div class="success-title">تم حفظ وإرسال الطلب بنجاح!</div>
-            <div class="success-desc">عاش يا <span id="courierNameSuccess"></span>، الطلب اتسجل ووصل للمحاسبين بنجاح.</div>
-            <button class="btn-reset" onclick="resetFormView()">تقديم طلب سلفة جديد ➕</button>
-        </div>
-    </div>
+    <div class="nav-tabs">
 
-    <!-- صفحة المحاسبين -->
-    <div id="accountantView" class="card hidden">
-        <div class="card-title">
-            <span>لوحة المحاسبين - طلبات السُلف</span>
-            <button class="btn-excel" onclick="exportToExcel()">📊 تحميل شيت إكسيل</button>
-        </div>
-        <div class="table-responsive">
-            <table>
-                <thead>
-                    <tr>
-                        <th>اسم المندوب</th>
-                        <th>الفرع</th>
-                        <th>المحافظة</th>
-                        <th>رقم التحويل</th>
-                        <th>طريقة التحويل</th>
-                        <th>المبلغ</th>
-                        <th>صورة القبض</th>
-                        <th>التاريخ</th>
-                    </tr>
-                </thead>
-                <tbody id="requestsTableBody"></tbody>
-            </table>
-        </div>
-    </div>
+        <button class="tab-btn active" id="courierTabBtn" onclick="switchView('courier')">تقديم طلب سلفة</button>
+
+        <button class="tab-btn" id="accountantTabBtn" onclick="switchView('accountant')">دخول المحاسبين 🔒</button>
+
+    </div>
+
+
+
+    <!-- صفحة المندوب -->
+
+    <div id="courierView" class="card">
+
+        <form id="advanceForm" onsubmit="event.preventDefault();">
+
+            <h3 class="card-title">بيانات الطلب</h3>
+
+            
+
+            <div class="input-group">
+
+                <label for="courierName">اسم المندوب *</label>
+
+                <input type="text" id="courierName" placeholder="اكتب اسمك رباعي" required>
+
+            </div>
+
+
+
+            <div class="input-group">
+
+                <label for="branchInput">الفرع / المنطقة *</label>
+
+                <input type="text" id="branchInput" placeholder="اكتب اسم الفرع أو المنطقة" required>
+
+            </div>
+
+
+
+            <div class="input-group">
+
+                <label for="governorateInput">المحافظة *</label>
+
+                <input type="text" id="governorateInput" placeholder="اكتب اسم المحافظة" required>
+
+            </div>
+
+
+
+            <div class="input-group">
+
+                <label for="transferNumber">رقم التحويل *</label>
+
+                <input type="tel" id="transferNumber" placeholder="مثال: 010xxxxxxxx" required dir="ltr">
+
+            </div>
+
+
+
+            <div class="input-group">
+
+                <label for="transferMethod">طريقة التحويل *</label>
+
+                <input type="text" id="transferMethod" placeholder="مثال: فودافون كاش / إنستاباي..." required>
+
+            </div>
+
+
+
+            <div class="input-group">
+
+                <label for="advanceAmount">مبلغ السلفة (جنيه) *</label>
+
+                <input type="number" id="advanceAmount" placeholder="مثال: 500" required>
+
+            </div>
+
+
+
+            <div class="input-group">
+
+                <label for="receiptImage">صورة القبض / الإيصال *</label>
+
+                <input type="file" id="receiptImage" accept="image/*" required>
+
+            </div>
+
+
+
+            <button type="button" id="submitBtn" class="btn-submit" onclick="submitAdvanceDirect()">حفظ وإرسال الطلب</button>
+
+        </form>
+
+
+
+        <!-- شاشة النجاح -->
+
+        <div id="successScreen" class="success-screen">
+
+            <div class="success-icon">✅</div>
+
+            <div class="success-title">تم حفظ وإرسال الطلب بنجاح!</div>
+
+            <div class="success-desc">عاش يا <span id="courierNameSuccess"></span>، الطلب اتسجل ووصل للمحاسبين بنجاح.</div>
+
+            <button class="btn-reset" onclick="resetFormView()">تقديم طلب سلفة جديد ➕</button>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- صفحة المحاسبين -->
+
+    <div id="accountantView" class="card hidden">
+
+        <div class="card-title">
+
+            <span>لوحة المحاسبين - طلبات السُلف</span>
+
+            <button class="btn-excel" onclick="exportToExcel()">📊 تحميل شيت إكسيل</button>
+
+        </div>
+
+        <div class="table-responsive">
+
+            <table>
+
+                <thead>
+
+                    <tr>
+
+                        <th>اسم المندوب</th>
+
+                        <th>الفرع</th>
+
+                        <th>المحافظة</th>
+
+                        <th>رقم التحويل</th>
+
+                        <th>طريقة التحويل</th>
+
+                        <th>المبلغ</th>
+
+                        <th>صورة القبض</th>
+
+                        <th>التاريخ</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody id="requestsTableBody"></tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
 </div>
 
-<script>
-    const ACCOUNTANT_PASSWORD = "55555";
 
-    function switchView(view) {
-        if (view === 'accountant') {
-            const pass = prompt("من فضلك أدخل كلمة سر المحاسبين:");
-            if (pass === ACCOUNTANT_PASSWORD) {
-                document.getElementById('courierView').classList.add('hidden');
-                document.getElementById('accountantView').classList.remove('hidden');
-                document.getElementById('courierTabBtn').classList.remove('active');
-                document.getElementById('accountantTabBtn').classList.add('active');
-                window.loadRequests();
-            } else if (pass !== null) {
-                alert("كلمة السر خاطئة!");
-            }
-        } else {
-            document.getElementById('accountantView').classList.add('hidden');
-            document.getElementById('courierView').classList.remove('hidden');
-            document.getElementById('accountantTabBtn').classList.remove('active');
-            document.getElementById('courierTabBtn').classList.add('active');
-        }
-    }
+
+<script>
+
+    const ACCOUNTANT_PASSWORD = "55555";
+
+
+
+    function switchView(view) {
+
+        if (view === 'accountant') {
+
+            const pass = prompt("من فضلك أدخل كلمة سر المحاسبين:");
+
+            if (pass === ACCOUNTANT_PASSWORD) {
+
+                document.getElementById('courierView').classList.add('hidden');
+
+                document.getElementById('accountantView').classList.remove('hidden');
+
+                document.getElementById('courierTabBtn').classList.remove('active');
+
+                document.getElementById('accountantTabBtn').classList.add('active');
+
+                window.loadRequests();
+
+            } else if (pass !== null) {
+
+                alert("كلمة السر خاطئة!");
+
+            }
+
+        } else {
+
+            document.getElementById('accountantView').classList.add('hidden');
+
+            document.getElementById('courierView').classList.remove('hidden');
+
+            document.getElementById('accountantTabBtn').classList.remove('active');
+
+            document.getElementById('courierTabBtn').classList.add('active');
+
+        }
+
+    }
+
 </script>
 
+
+
 </body>
-</html>
+
+</html> 
