@@ -89,38 +89,52 @@
             const file = receiptInput.files[0];
             const dateStr = new Date().toLocaleString('ar-EG');
 
-            submitBtn.innerText = "جاري حفظ الطلب...";
+            submitBtn.innerText = "جاري رفع الإيصال وحفظ الطلب...";
             submitBtn.disabled = true;
 
-            const reader = new FileReader();
-            reader.onload = async function(e) {
-                const base64Image = e.target.result;
-                try {
-                    await addDoc(collection(db, "advances"), {
-                        name: name,
-                        branch: branch,
-                        governorate: governorate,
-                        transferNumber: transferNumber,
-                        transferMethod: transferMethod,
-                        amount: amount,
-                        receiptImageBase64: base64Image,
-                        createdAt: new Date(),
-                        dateString: dateStr
-                    });
+            try {
+                // رفع الصورة على سيرفر رفع مجاني للحصول على رابط ويب حقيقي مباشر
+                const formData = new FormData();
+                formData.append("image", file);
 
-                    document.getElementById('advanceForm').reset();
-                    document.getElementById('advanceForm').style.display = "none";
-                    document.getElementById('successScreen').style.display = "block";
-                    document.getElementById('courierNameSuccess').innerText = name;
-                } catch (error) {
-                    console.error("خطأ في حفظ البيانات:", error);
-                    alert("حدث خطأ أثناء حفظ الطلب في قاعدة البيانات.");
-                } finally {
-                    submitBtn.innerText = "حفظ وإرسال الطلب";
-                    submitBtn.disabled = false;
+                const response = await fetch("https://api.imgbb.com/1/upload?key=6d207e0293d8f1d9a0d8442e3998f4e2", {
+                    method: "POST",
+                    body: formData
+                });
+                const result = await response.json();
+
+                let imageUrl = "";
+                if (result && result.success) {
+                    imageUrl = result.data.url; // رابط حقيقي يبدأ بـ https://i.ibb.co/...
+                } else {
+                    throw new Error("فشل رفع الصورة");
                 }
-            };
-            reader.readAsDataURL(file);
+
+                // حفظ الرابط الحقيقي في الـ Firestore
+                await addDoc(collection(db, "advances"), {
+                    name: name,
+                    branch: branch,
+                    governorate: governorate,
+                    transferNumber: transferNumber,
+                    transferMethod: transferMethod,
+                    amount: amount,
+                    receiptUrl: imageUrl,
+                    createdAt: new Date(),
+                    dateString: dateStr
+                });
+
+                document.getElementById('advanceForm').reset();
+                document.getElementById('advanceForm').style.display = "none";
+                document.getElementById('successScreen').style.display = "block";
+                document.getElementById('courierNameSuccess').innerText = name;
+
+            } catch (error) {
+                console.error("خطأ:", error);
+                alert("حدث خطأ أثناء رفع الصورة أو حفظ الطلب، تأكد من الاتصال بالإنترنت.");
+            } finally {
+                submitBtn.innerText = "حفظ وإرسال الطلب";
+                submitBtn.disabled = false;
+            }
         };
 
         window.resetFormView = function() {
@@ -152,14 +166,12 @@
                     return;
                 }
 
-                let index = 0;
                 querySnapshot.forEach((doc) => {
                     const data = doc.data();
                     fetchedRequestsData.push(data);
-                    const currentIndex = index++;
 
-                    const imageBtn = data.receiptImageBase64 
-                        ? `<button onclick="viewReceiptImage(${currentIndex})" style="background:#0066cc; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer; font-weight:bold;">عرض الإيصال 🖼️</button>` 
+                    const imageBtn = data.receiptUrl 
+                        ? `<a href="${data.receiptUrl}" target="_blank" style="background:#0066cc; color:white; padding:5px 10px; border-radius:4px; text-decoration:none; font-weight:bold; display:inline-block;">عرض الإيصال 🖼️</a>` 
                         : 'لا يوجد';
 
                     const row = `<tr>
@@ -181,14 +193,6 @@
             });
         };
 
-        window.viewReceiptImage = function(index) {
-            const item = fetchedRequestsData[index];
-            if (item && item.receiptImageBase64) {
-                const win = window.open();
-                win.document.write(`<html dir="rtl"><head><title>إيصال التحويل</title></head><body style="text-align:center;background:#333;margin:0;padding:20px;"><img src="${item.receiptImageBase64}" style="max-width:100%;height:auto;border-radius:8px;" /></body></html>`);
-            }
-        };
-
         window.exportToExcel = function() {
             if (fetchedRequestsData.length === 0) {
                 alert("لا توجد بيانات لتصديرها!");
@@ -196,17 +200,11 @@
             }
 
             let csvContent = "\uFEFF";
-            csvContent += "اسم المندوب,الفرع,المحافظة,رقم التحويل,طريقة التحويل,مبلغ السلفة,رابط فتح الإيصال,التاريخ\n";
+            csvContent += "اسم المندوب,الفرع,المحافظة,رقم التحويل,طريقة التحويل,مبلغ السلفة,رابط الإيصال,التاريخ\n";
 
             fetchedRequestsData.forEach(item => {
-                // استخدام صيغة HYPERLINK الرسمية للإكسيل بتوجيه لرابط الواتساب أو النظام المباشر
-                let excelHyperlink = item.receiptImageBase64 
-                    ? `=HYPERLINK("https://wa.me/2${item.transferNumber}?text=معاينة%20إيصال%20المندوب%20${encodeURIComponent(item.name)}", "فتح عبر الواتساب")` 
-                    : "لا يوجد";
-                
-                let currentStatus = item.receiptImageBase64 ? "مرفق ومحفوظ بالنظام" : "لا يوجد";
-
-                csvContent += `"${item.name || ''}","${item.branch || ''}","${item.governorate || ''}","'${item.transferNumber || ''}","${item.transferMethod || ''}","${item.amount || 0}","${currentStatus}","${item.dateString || ''}"\n`;
+                let linkVal = item.receiptUrl ? item.receiptUrl : "لا يوجد";
+                csvContent += `"${item.name || ''}","${item.branch || ''}","${item.governorate || ''}","'${item.transferNumber || ''}","${item.transferMethod || ''}","${item.amount || 0}","${linkVal}","${item.dateString || ''}"\n`;
             });
 
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -305,7 +303,7 @@
                         <th>رقم التحويل</th>
                         <th>طريقة التحويل</th>
                         <th>المبلغ</th>
-                        <th>صورة القبض</th>
+                        <th>رابط الإيصال</th>
                         <th>التاريخ</th>
                     </tr>
                 </thead>
